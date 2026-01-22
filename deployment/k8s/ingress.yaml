@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-voice-assistant
+  namespace: devops
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "devops-voice-ip"
+    networking.gke.io/managed-certificates: "devops-voice-cert"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: devops-voice.example.com
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: devops-voice-assistant
+            port:
+              number: 8000
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: devops-voice-cert
+  namespace: devops
+spec:
+  domains:
+  - devops-voice.example.com
