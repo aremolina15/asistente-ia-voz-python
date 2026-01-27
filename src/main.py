@@ -8,6 +8,8 @@ import logging
 import os
 from datetime import datetime
 
+from src.routers import voice
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,6 +55,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Routers
+app.include_router(voice.router, prefix=f"{API_PREFIX}/voice", tags=["voice"])
 
 
 @app.get("/")

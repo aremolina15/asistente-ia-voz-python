@@ -101,7 +101,7 @@ make help
 ## ⚙️ Configuración (Si Necesitas Cambiar)
 
 El archivo `.env` está configurado con:
-- **Proyecto GCP**: `bdb-gcp-pr-cds-idt`
+- **Proyecto GCP**: `heroic-dolphin-455016-q8`
 - **Región**: `us-central1`
 - **Debug Mode**: `Habilitado`
 - **Log Level**: `INFO`

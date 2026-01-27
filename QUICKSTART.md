@@ -167,7 +167,7 @@ print(response.json())
 # .env
 GOOGLE_CLOUD_PROJECT=your-project-id
 GCP_REGION=us-central1
-VERTEX_AI_MODEL=gemini-1.5-pro
+VERTEX_AI_MODEL=gemini-2.0-flash
 STORAGE_BUCKET=your-bucket-name
 LOG_LEVEL=INFO
 DEBUG=False
