@@ -22,7 +22,10 @@ source venv/bin/activate
 # Cargar variables de entorno desde .env si existe
 if [ -f .env ]; then
     echo "🔐 Cargando configuración desde .env..."
-    export $(grep -v '^#' .env | xargs)
+    # Usar set -a para exportar automáticamente las variables
+    set -a
+    source .env
+    set +a
 else
     echo "⚠️  Archivo .env no encontrado. Usando variables de entorno del sistema..."
 fi

@@ -42,7 +42,7 @@ class Settings(BaseSettings):
             warnings.warn(
                 "⚠️  ADVERTENCIA DE SEGURIDAD: Usando SECRET_KEY por defecto en modo producción. "
                 "Por favor configura SECRET_KEY en tu archivo .env con un valor único y seguro.",
-                SecurityWarning,
+                UserWarning,
                 stacklevel=2
             )
 
