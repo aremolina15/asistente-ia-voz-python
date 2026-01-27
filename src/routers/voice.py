@@ -17,6 +17,12 @@ class VoiceQuery(BaseModel):
     language_code: str = "es-ES"
 
 
+class SynthesizeRequest(BaseModel):
+    """Solicitud para síntesis de voz"""
+    text: str
+    language_code: str = "es-ES"
+
+
 class AudioTranscriptionResponse(BaseModel):
     """Respuesta de transcripción de audio"""
     transcript: str
@@ -51,27 +57,27 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
 
 @router.post("/synthesize")
-async def synthesize_speech(text: str, language_code: str = "es-ES"):
+async def synthesize_speech(request: SynthesizeRequest):
     """
     Sintetizar texto a voz
     
     Retorna audio MP3
     """
     try:
-        if not text or len(text) == 0:
+        if not request.text or len(request.text) == 0:
             raise HTTPException(status_code=400, detail="Texto vacío")
         
-        if len(text) > 5000:
+        if len(request.text) > 5000:
             raise HTTPException(status_code=400, detail="Texto muy largo (máximo 5000 caracteres)")
         
         # Sintetizar usando GCP
         gcp_service = get_gcp_service()
-        audio_content = gcp_service.synthesize_speech(text, language_code)
+        audio_content = gcp_service.synthesize_speech(request.text, request.language_code)
         
         return {
             "audio_base64": __import__("base64").b64encode(audio_content).decode("utf-8"),
             "format": "mp3",
-            "text": text,
+            "text": request.text,
         }
     except Exception as e:
         logger.error(f"Error en síntesis de voz: {str(e)}")
