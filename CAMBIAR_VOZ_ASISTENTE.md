@@ -239,3 +239,4 @@ name="pt-BR-Neural2-B"  # Masculino
 ---
 
 **Última actualización:** 27 enero 2026
+
