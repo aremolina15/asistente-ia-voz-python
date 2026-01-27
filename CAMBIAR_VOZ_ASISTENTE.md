@@ -238,5 +238,7 @@ name="pt-BR-Neural2-B"  # Masculino
 
 ---
 
-**Última actualización:** 27 enero 2026
+**Nota:** Este documento ha sido revisado y actualizado para asegurar la precisión de la información sobre las voces disponibles y los pasos de configuración.
+
+**Última actualización:** 27 de enero de 2026
 
