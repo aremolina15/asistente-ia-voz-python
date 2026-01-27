@@ -2,7 +2,10 @@
 
 # Script rápido para ejecutar el servidor
 
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+# Usar el directorio actual o especificar via variable de entorno
+PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
+
+cd "$PROJECT_DIR"
 
 echo "═════════════════════════════════════════════════════════════"
 echo "🚀 Iniciando DevOps Voice Assistant"

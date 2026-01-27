@@ -164,7 +164,7 @@ PROCESS THREAD (Hilo de Procesamiento)
 
 ### Variables de Entorno (.env)
 ```
-GOOGLE_CLOUD_PROJECT=heroic-dolphin-455016-q8
+GOOGLE_CLOUD_PROJECT=tu-proyecto-gcp
 GCP_REGION=us-central1
 VERTEX_AI_MODEL=gemini-2.0-flash
 GOOGLE_APPLICATION_CREDENTIALS=/ruta/a/credentials.json

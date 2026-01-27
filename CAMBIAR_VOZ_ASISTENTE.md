@@ -175,7 +175,7 @@ Después de editar el archivo, reinicia el servidor:
 # Detén el servidor (CTRL+C en la terminal donde corre)
 
 # Reinicia:
-cd "/home/aremol1/Documents/LABs Personal/ASSISTENT-DEVOPS-VOICE/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 source .venv/bin/activate
 python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 ```

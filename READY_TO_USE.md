@@ -158,7 +158,7 @@ curl http://localhost:8000/api/v1/governance/best-practices/gke
 ### **Paso 2: Instalar Dependencias Completas (Opcional)**
 Si quieres usar todas las funciones de voz:
 ```bash
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 source venv/bin/activate
 pip install google-cloud-speech google-cloud-texttospeech google-cloud-aiplatform vertexai
 ```
@@ -176,7 +176,7 @@ El servidor **recarga automáticamente** cuando cambias el código.
 ## 📁 Archivos Importantes
 
 ```
-/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python/
+<directorio-del-proyecto>/
 
 ├── src/main.py          ← El servidor (endpoints aquí)
 ├── .env                 ← Variables de entorno
@@ -202,7 +202,7 @@ O simplemente cierra la terminal donde está corriendo.
 ## 🔍 Ver los Logs
 
 ```bash
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 tail -f server.log
 ```
 
@@ -212,7 +212,7 @@ tail -f server.log
 
 ### Ejecutar ejemplos:
 ```bash
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 source venv/bin/activate
 python examples.py
 ```
