@@ -48,9 +48,13 @@ app = FastAPI(
 )
 
 # Configurar CORS
+# NOTA: En producción, configura allowed_origins con dominios específicos
+# Ejemplo: allowed_origins=["https://tudominio.com", "https://app.tudominio.com"]
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
