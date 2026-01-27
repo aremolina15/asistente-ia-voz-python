@@ -68,8 +68,15 @@ Se eliminaron ~190 líneas de código duplicado de `main.py` (líneas 84-268), d
 | `src/config.py` | ✅ USADO | Configuración de la aplicación |
 | `voice_client.py` | ✅ USADO | Cliente de voz en línea de comandos |
 | `examples.py` | ✅ USADO | Ejemplos de uso de la API |
-| `temp.wav` | ✅ USADO | Archivo temporal para grabación de audio |
-| `response.mp3` | ✅ USADO | Archivo temporal para respuesta de audio |
+
+### Archivos Temporales (Generados en Runtime) 🔄
+
+| Archivo | Estado | Descripción |
+|---------|--------|-------------|
+| `temp.wav` | 🔄 GENERADO | Archivo temporal para grabación de audio (no en repo) |
+| `response.mp3` | 🔄 GENERADO | Archivo temporal para respuesta de audio (no en repo) |
+
+**Nota:** Estos archivos son generados dinámicamente por `voice_client.py` y ya están excluidos en `.gitignore`.
 
 ### Archivos Eliminados 🗑️
 

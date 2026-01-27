@@ -104,9 +104,6 @@ Thumbs.db
 secrets/
 config/local.yaml
 
-# Temporary audio files
-temp.wav
-response.mp3
-output.mp3
+# Temporary audio files (generated at runtime)
 *.mp3
 *.wav
