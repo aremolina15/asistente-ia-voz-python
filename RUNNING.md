@@ -76,7 +76,7 @@ curl http://localhost:8000/api/v1/recommendations/quick/security
 
 ### **Ejecutar Ejemplos**
 ```bash
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # O la ruta de tu proyecto
 source venv/bin/activate
 python examples.py
 ```
@@ -100,16 +100,13 @@ make help
 
 ## ⚙️ Configuración (Si Necesitas Cambiar)
 
-El archivo `.env` está configurado con:
-- **Proyecto GCP**: `heroic-dolphin-455016-q8`
-- **Región**: `us-central1`
-- **Debug Mode**: `Habilitado`
+El archivo `.env` debe estar configurado con:
+- **Proyecto GCP**: Tu ID de proyecto GCP
+- **Región**: `us-central1` (o tu región preferida)
+- **Debug Mode**: Configurable según entorno
 - **Log Level**: `INFO`
 
-Si necesitas cambiar algo, edita:
-```
-/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python/.env
-```
+Si necesitas cambiar algo, edita el archivo `.env` en la raíz del proyecto.
 
 ---
 
