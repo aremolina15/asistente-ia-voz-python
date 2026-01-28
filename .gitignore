@@ -103,3 +103,7 @@ Thumbs.db
 .credentials/
 secrets/
 config/local.yaml
+
+# Temporary audio files (generated at runtime)
+*.mp3
+*.wav
