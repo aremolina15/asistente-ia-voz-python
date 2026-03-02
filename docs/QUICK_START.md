@@ -4,12 +4,12 @@
 
 ```bash
 # Terminal 1: Servidor
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 source venv/bin/activate
 python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Terminal 2: Cliente
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 python voice_client.py
 ```
 

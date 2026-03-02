@@ -12,7 +12,7 @@ Permission 'aiplatform.endpoints.predict' denied on resource
 
 **Desde la consola GCP:**
 1. Ve a **IAM & Admin** → **Service Accounts**
-2. Busca y haz clic en: `heroic-dolphin-455016-q8@appspot.gserviceaccount.com`
+2. Busca y haz clic en tu cuenta de servicio de App Engine: `<TU-PROYECTO>@appspot.gserviceaccount.com`
 3. Ve a la pestaña **Keys**
 4. Haz clic en **Create new key** → **JSON**
 5. Se descargará `service-account-key.json`
@@ -20,7 +20,7 @@ Permission 'aiplatform.endpoints.predict' denied on resource
 **O desde terminal:**
 ```bash
 gcloud iam service-accounts keys create appengine-sa-key.json \
-  --iam-account=heroic-dolphin-455016-q8@appspot.gserviceaccount.com
+  --iam-account=TU-PROYECTO@appspot.gserviceaccount.com
 ```
 
 ### Paso 2: Agregar la ruta en `.env`
@@ -28,7 +28,7 @@ gcloud iam service-accounts keys create appengine-sa-key.json \
 Asegúrate que tu `.env` tenga:
 ```env
 GOOGLE_APPLICATION_CREDENTIALS=./appengine-sa-key.json
-GOOGLE_CLOUD_PROJECT=heroic-dolphin-455016-q8
+GOOGLE_CLOUD_PROJECT=tu-proyecto-gcp
 GCP_REGION=us-central1
 ```
 
@@ -36,22 +36,22 @@ GCP_REGION=us-central1
 
 Ejecuta este comando en terminal:
 ```bash
-gcloud projects add-iam-policy-binding heroic-dolphin-455016-q8 \
-  --member=serviceAccount:heroic-dolphin-455016-q8@appspot.gserviceaccount.com \
+gcloud projects add-iam-policy-binding TU-PROYECTO-GCP \
+  --member=serviceAccount:TU-PROYECTO@appspot.gserviceaccount.com \
   --role=roles/aiplatform.user
 ```
 
 ### Paso 4: Verificar que se asignó
 
 ```bash
-gcloud projects get-iam-policy heroic-dolphin-455016-q8 \
+gcloud projects get-iam-policy TU-PROYECTO-GCP \
   --flatten="bindings[].members" \
   --filter="bindings.role:aiplatform.user"
 ```
 
 Deberías ver:
 ```
-- serviceAccount:heroic-dolphin-455016-q8@appspot.gserviceaccount.com
+- serviceAccount:TU-PROYECTO@appspot.gserviceaccount.com
 ```
 
 ### Paso 5: Esperar y reiniciar el servidor
@@ -62,7 +62,7 @@ Los permisos pueden tardar **1-2 minutos** en propagarse. Luego:
 # Detén el servidor actual (CTRL+C)
 
 # Reinicia:
-cd "/home/aremol1/Documents/LABs Personal/ASSISTENT-DEVOPS-VOICE/asistente-ia-voz-python"
+cd $PROJECT_DIR  # Cambia a tu directorio del proyecto
 source .venv/bin/activate
 python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 ```

@@ -26,9 +26,13 @@ chmod +x start_voice_client.sh
 
 ### Opción 2: Manual
 ```bash
-cd "/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/asistente-ia-voz-python"
+# Configura las variables de entorno primero
+export GOOGLE_APPLICATION_CREDENTIALS="/ruta/a/tus/credenciales.json"
+export GOOGLE_CLOUD_PROJECT="tu-proyecto-gcp"
+
+# Activa el entorno virtual e inicia el cliente
+cd "$PROJECT_DIR"
 source venv/bin/activate
-export GOOGLE_APPLICATION_CREDENTIALS="/home/aremol1/Documents/LABs Personal/IA-VOZ-DEVOPS/application_default_credentials.json"
 python voice_client.py
 ```
 

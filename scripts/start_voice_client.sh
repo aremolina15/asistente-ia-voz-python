@@ -32,7 +32,24 @@ if [ -f ".env" ]; then
     set -a
     source .env
     set +a
+else
+    echo "⚠️  Archivo .env no encontrado. Usando variables de entorno del sistema..."
 fi
+
+# Verificar que las variables requeridas estén configuradas
+if [ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+    echo "❌ GOOGLE_APPLICATION_CREDENTIALS no está configurado"
+    echo "   Por favor, exporta la variable o agrégala al archivo .env"
+    exit 1
+fi
+
+if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
+    echo "❌ GOOGLE_CLOUD_PROJECT no está configurado"
+    echo "   Por favor, exporta la variable o agrégala al archivo .env"
+    exit 1
+fi
+
+echo "✅ Configuración cargada"
 
 # Verificar que el servidor esté corriendo
 echo "🔍 Verificando servidor..."
@@ -41,7 +58,7 @@ if ! curl -s http://localhost:8000/health > /dev/null 2>&1; then
     echo ""
     echo "Por favor, inicia el servidor en otra terminal con:"
     echo "  cd '$PROJECT_DIR'"
-    echo "  source .venv/bin/activate"
+    echo "  source .venv/bin/activate  # o source venv/bin/activate"
     echo "  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
     echo ""
     exit 1

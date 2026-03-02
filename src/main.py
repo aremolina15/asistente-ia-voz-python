@@ -91,8 +91,6 @@ async def frontend_app():
         "error": "Frontend no encontrado",
         "hint": "Crea frontend/index.html",
     }
-
-
 if __name__ == "__main__":
     import uvicorn
 
