@@ -229,7 +229,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/governance/analyze \
 
 ## ⚙️ Operación y despliegue
 
-- Despliegue local: `uvicorn`, `docker-compose`, frontend en `/app`.
+- Despliegue local: `uvicorn`, `docker-compose`, ruta HTTP `/app` sirviendo `frontend/index.html` desde el backend.
 - Despliegue productivo: manifiestos en `deployment/k8s`.
 - Documentación adicional de seguridad y revisión: `SECURITY.md` y `CODE_REVIEW_FINDINGS.md`.
 
