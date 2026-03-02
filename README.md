@@ -21,7 +21,7 @@ Centralizar el conocimiento DevOps (estándares, Terraform, CI/CD, seguridad, se
 - Recomendaciones DevOps por contexto e infraestructura.
 - Análisis de gobernanza (IAM, Storage, GKE) y compliance score.
 - Persistencia de audios en Cloud Storage.
-- Frontend web con micrófono en `/app` para demo y uso rápido.
+- Frontend web con micrófono disponible en la ruta HTTP `/app`, servido desde `frontend/index.html`, para demo y uso rápido.
 - Respuesta natural en español (`es-CO` por defecto), con soporte configurable de voz.
 
 ## 🏗️ Arquitectura General
