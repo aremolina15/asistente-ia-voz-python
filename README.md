@@ -223,7 +223,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/governance/analyze \
 
 - Usa credenciales por variables de entorno y **no** hardcodees claves o tokens.
 - No subas `.env`, llaves JSON, tokens de acceso ni credenciales temporales al repositorio.
-- Configura `SECRET_KEY` y `ALLOWED_ORIGINS` para ambientes reales.
+- Configura `SECRET_KEY` y `ALLOWED_ORIGINS` para ambientes reales; **nota**: en la versión actual `SECRET_KEY` solo se lee desde `src/config.py` y no se usa para autenticación, sesiones ni firmas criptográficas.
 - Aplica mínimo privilegio para cuentas de servicio y revisa permisos periódicamente.
 - Mantén trazabilidad en logs, evitando registrar datos sensibles en texto plano.
 
