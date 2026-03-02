@@ -53,13 +53,13 @@ echo "✅ Configuración cargada"
 
 # Verificar que el servidor esté corriendo
 echo "🔍 Verificando servidor..."
-if ! curl -s http://localhost:8000/health > /dev/null 2>&1; then
-    echo "⚠️  El servidor no está corriendo en localhost:8000"
+if ! curl -fs http://127.0.0.1:8000/health > /dev/null 2>&1; then
+    echo "⚠️  El servidor no está corriendo en 127.0.0.1:8000"
     echo ""
     echo "Por favor, inicia el servidor en otra terminal con:"
     echo "  cd '$PROJECT_DIR'"
     echo "  source .venv/bin/activate  # o source venv/bin/activate"
-    echo "  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    echo "  python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload"
     echo ""
     exit 1
 fi

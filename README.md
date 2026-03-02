@@ -21,6 +21,8 @@ Centralizar el conocimiento DevOps (estándares, Terraform, CI/CD, seguridad, se
 - Recomendaciones DevOps por contexto e infraestructura.
 - Análisis de gobernanza (IAM, Storage, GKE) y compliance score.
 - Persistencia de audios en Cloud Storage.
+- Frontend web con micrófono disponible en la ruta HTTP `/app`, servido desde `frontend/index.html`, para demo y uso rápido.
+- Respuesta natural en español (`es-CO` por defecto), con soporte configurable de voz.
 
 ## 🏗️ Arquitectura General
 
@@ -143,6 +145,12 @@ source .venv/bin/activate
 python voice_client.py
 ```
 
+### Script de arranque del cliente (opcional)
+
+```bash
+./scripts/start_voice_client.sh
+```
+
 ## 🧠 Modo RAG
 
 ### Ingestar conocimiento
@@ -211,11 +219,19 @@ curl -X POST http://127.0.0.1:8000/api/v1/governance/analyze \
   -d '{"resource_type":"iam","resource_data":{"audit_logging_enabled":false}}'
 ```
 
-## 🔐 Seguridad y Operación
+## 🔐 Seguridad (sin exponer secretos)
 
-- Uso de service account para integración GCP.
-- Trazabilidad por logs y almacenamiento de audios en bucket.
-- Despliegue local con Docker Compose y productivo en `deployment/k8s`.
+- Usa credenciales por variables de entorno y **no** hardcodees claves o tokens.
+- No subas `.env`, llaves JSON, tokens de acceso ni credenciales temporales al repositorio.
+- Configura `SECRET_KEY` y `ALLOWED_ORIGINS` para ambientes reales; **nota**: en la versión actual `SECRET_KEY` solo se lee desde `src/config.py` y no se usa para autenticación, sesiones ni firmas criptográficas.
+- Aplica mínimo privilegio para cuentas de servicio y revisa permisos periódicamente.
+- Mantén trazabilidad en logs, evitando registrar datos sensibles en texto plano.
+
+## ⚙️ Operación y despliegue
+
+- Despliegue local: `uvicorn`, `docker-compose`, ruta HTTP `/app` sirviendo `frontend/index.html` desde el backend.
+- Despliegue productivo: manifiestos en `deployment/k8s`.
+- Documentación adicional de seguridad y revisión: `SECURITY.md` y `CODE_REVIEW_FINDINGS.md`.
 
 ## 🤝 Contribución
 
@@ -225,4 +241,4 @@ curl -X POST http://127.0.0.1:8000/api/v1/governance/analyze \
 
 ---
 
-**Última actualización**: 2026-03-01
+**Última actualización**: 2026-03-02
