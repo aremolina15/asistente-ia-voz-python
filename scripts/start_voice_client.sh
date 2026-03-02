@@ -5,8 +5,8 @@
 
 set -e
 
-# Usar el directorio actual o especificar via variable de entorno
-PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( dirname "$SCRIPT_DIR" )"
 
 echo "🚀 Iniciando Cliente de Voz DevOps"
 echo "=================================="
@@ -17,12 +17,18 @@ cd "$PROJECT_DIR"
 
 # Activar entorno virtual
 echo "📦 Activando entorno virtual..."
-source venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv" ]; then
+    source venv/bin/activate
+else
+    echo "❌ No se encontró entorno virtual (.venv o venv)"
+    exit 1
+fi
 
-# Cargar variables de entorno desde .env si existe
-if [ -f .env ]; then
-    echo "🔐 Cargando configuración desde .env..."
-    # Usar set -a para exportar automáticamente las variables
+# Exportar variables de entorno (si existe .env)
+if [ -f ".env" ]; then
+    echo "🔐 Cargando variables desde .env..."
     set -a
     source .env
     set +a
@@ -51,21 +57,19 @@ if ! curl -s http://localhost:8000/health > /dev/null 2>&1; then
     echo "⚠️  El servidor no está corriendo en localhost:8000"
     echo ""
     echo "Por favor, inicia el servidor en otra terminal con:"
-    echo "  cd \$PROJECT_DIR"
-    echo "  source venv/bin/activate"
+    echo "  cd '$PROJECT_DIR'"
+    echo "  source .venv/bin/activate  # o source venv/bin/activate"
     echo "  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
     echo ""
     exit 1
 fi
 echo "✅ Servidor OK"
 
-# Verificar credenciales
-if [ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
-    echo "❌ Archivo de credenciales no encontrado:"
+# Verificar credenciales opcionales
+if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ] && [ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+    echo "⚠️  GOOGLE_APPLICATION_CREDENTIALS apunta a un archivo inexistente"
     echo "   $GOOGLE_APPLICATION_CREDENTIALS"
-    exit 1
 fi
-echo "✅ Credenciales OK"
 
 echo ""
 echo "=================================="

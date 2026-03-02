@@ -5,6 +5,10 @@
 
 set -e
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( dirname "$SCRIPT_DIR" )"
+cd "$PROJECT_DIR"
+
 # Colores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -27,7 +31,7 @@ print_error() {
 # Validar argumentos
 if [ -z "$1" ]; then
     print_error "Project ID es requerido"
-    echo "Uso: ./setup.sh <project-id>"
+    echo "Uso: ./scripts/setup.sh <project-id>"
     exit 1
 fi
 
@@ -89,16 +93,22 @@ fi
 
 # 7. Crear entorno virtual
 print_info "Creando entorno virtual..."
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
+if [ ! -d ".venv" ] && [ ! -d "venv" ]; then
+    python3 -m venv .venv
     print_success "Entorno virtual creado"
 else
     print_success "Entorno virtual ya existe"
 fi
 
+if [ -d ".venv" ]; then
+    VENV_DIR=".venv"
+else
+    VENV_DIR="venv"
+fi
+
 # 8. Instalar dependencias
 print_info "Instalando dependencias..."
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 pip install --upgrade pip
 pip install -r requirements.txt
 print_success "Dependencias instaladas"
@@ -110,6 +120,6 @@ gcloud auth application-default login
 print_success "✨ Setup completado exitosamente!"
 print_info "Próximos pasos:"
 echo "1. Actualiza .env con tus configuraciones específicas"
-echo "2. Ejecuta: source venv/bin/activate"
+echo "2. Ejecuta: source $VENV_DIR/bin/activate"
 echo "3. Ejecuta: python -m uvicorn src.main:app --reload"
 echo "4. Accede a http://localhost:8000/docs"

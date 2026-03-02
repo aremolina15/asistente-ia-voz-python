@@ -37,8 +37,8 @@ setup:
 		echo "Uso: make setup GCP_PROJECT=your-project-id"; \
 		exit 1; \
 	fi
-	chmod +x setup.sh
-	./setup.sh $(GCP_PROJECT)
+	chmod +x scripts/setup.sh
+	./scripts/setup.sh $(GCP_PROJECT)
 
 # Instalación
 install:
@@ -104,10 +104,10 @@ clean:
 	@echo "✅ Limpieza completada"
 
 show-structure:
-	python show-structure.py
+	python scripts/show-structure.py
 
 examples:
-	python examples.py
+	python examples/api_examples.py
 
 # Tareas combinadas
 check: lint test coverage

@@ -1,7 +1,7 @@
 """
 Router para procesamiento de voz
 """
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Form
 from pydantic import BaseModel
 import logging
 from datetime import datetime
@@ -11,18 +11,35 @@ from src.config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+_rag_pipeline = None
+
+
+def _get_rag_pipeline():
+    global _rag_pipeline
+    if _rag_pipeline is not None:
+        return _rag_pipeline
+
+    try:
+        from src.rag import RagPipeline
+
+        _rag_pipeline = RagPipeline()
+        logger.info("✅ RAG pipeline inicializado")
+        return _rag_pipeline
+    except Exception as rag_error:
+        logger.warning(f"⚠️ No se pudo inicializar RAG, usando fallback base: {str(rag_error)}")
+        return None
 
 
 class VoiceQuery(BaseModel):
     """Modelo para consulta de voz"""
     query: str
-    language_code: str = "es-ES"
+    language_code: str = settings.voice_default_language_code
 
 
 class SynthesizeRequest(BaseModel):
     """Solicitud para síntesis de voz"""
     text: str
-    language_code: str = "es-ES"
+    language_code: str = settings.voice_default_language_code
 
 
 class AudioTranscriptionResponse(BaseModel):
@@ -32,11 +49,11 @@ class AudioTranscriptionResponse(BaseModel):
 
 
 @router.post("/transcribe", response_model=AudioTranscriptionResponse)
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(file: UploadFile = File(...), language_code: str = Form(settings.voice_default_language_code)):
     """
     Transcribir archivo de audio a texto
     
-    - Soporta formatos: WAV, OGG, FLAC, MP3
+    - Soporta formatos: WAV, OGG, WEBM, FLAC, MP3
     """
     try:
         # Leer contenido del archivo
@@ -54,11 +71,16 @@ async def transcribe_audio(file: UploadFile = File(...)):
         logger.info(f"📦 Audio guardado: {input_path}")
         
         # Transcribir usando GCP
-        transcript = gcp_service.transcribe_audio(content)
+        transcription = gcp_service.transcribe_audio(content, language_code=language_code)
+        transcript = transcription.get("transcript", "")
+        confidence = transcription.get("confidence", 0.0)
+
+        if not transcript:
+            raise HTTPException(status_code=422, detail="No se pudo extraer texto del audio. Intenta hablar más claro o reducir ruido.")
         
         return AudioTranscriptionResponse(
             transcript=transcript,
-            confidence=0.95,
+            confidence=confidence,
         )
     except Exception as e:
         logger.error(f"Error en transcripción: {str(e)}")
@@ -109,9 +131,19 @@ async def voice_query(query: VoiceQuery):
     try:
         gcp_service = get_gcp_service()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # Generar recomendación IA
-        response = gcp_service.get_ai_recommendation(query.query)
+
+        sources = []
+        response = ""
+
+        if settings.rag_enabled:
+            rag_pipeline = _get_rag_pipeline()
+            if rag_pipeline is not None:
+                rag_result = rag_pipeline.answer(query.query)
+                response = rag_result.get("response", "")
+                sources = rag_result.get("sources", [])
+
+        if not response:
+            response = gcp_service.get_ai_recommendation(query.query)
         
         # Sintetizar respuesta a voz
         audio_content = gcp_service.synthesize_speech(response, query.language_code)
@@ -124,6 +156,8 @@ async def voice_query(query: VoiceQuery):
         return {
             "query": query.query,
             "response": response,
+            "sources": sources,
+            "rag_enabled": settings.rag_enabled,
             "audio_base64": __import__("base64").b64encode(audio_content).decode("utf-8"),
             "format": "mp3",
             "storage_path": f"gs://{settings.storage_bucket}/{response_path}",

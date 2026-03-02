@@ -3,7 +3,9 @@ Punto de entrada de la aplicación FastAPI
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
+from pathlib import Path
 import logging
 import os
 
@@ -17,6 +19,8 @@ logger = logging.getLogger(__name__)
 APP_NAME = "DevOps Voice Assistant"
 APP_VERSION = "1.0.0"
 API_PREFIX = "/api/v1"
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_INDEX = BASE_DIR / "frontend" / "index.html"
 
 try:
     from src.config import settings
@@ -78,6 +82,15 @@ async def root():
     }
 
 
+@app.get("/app")
+async def frontend_app():
+    """Frontend web para conversar por micrófono con el asistente."""
+    if FRONTEND_INDEX.exists():
+        return FileResponse(FRONTEND_INDEX)
+    return {
+        "error": "Frontend no encontrado",
+        "hint": "Crea frontend/index.html",
+    }
 if __name__ == "__main__":
     import uvicorn
 

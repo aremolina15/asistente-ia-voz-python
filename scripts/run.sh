@@ -5,7 +5,8 @@
 
 set -e
 
-PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( dirname "$SCRIPT_DIR" )"
 cd "$PROJECT_DIR"
 
 echo "════════════════════════════════════════════════════════════"
@@ -20,18 +21,25 @@ echo "✅ Python disponible"
 echo ""
 
 # 2. Activar o crear entorno virtual
-if [ ! -d "venv" ]; then
-    echo "2️⃣  Creando entorno virtual..."
-    python3 -m venv venv
-    echo "✅ Entorno virtual creado"
+if [ -d ".venv" ]; then
+    VENV_DIR=".venv"
+elif [ -d "venv" ]; then
+    VENV_DIR="venv"
 else
+    VENV_DIR=".venv"
+    echo "2️⃣  Creando entorno virtual..."
+    python3 -m venv "$VENV_DIR"
+    echo "✅ Entorno virtual creado"
+fi
+
+if [ -d "$VENV_DIR" ]; then
     echo "2️⃣  Entorno virtual ya existe"
 fi
 echo ""
 
 # 3. Activar entorno
 echo "3️⃣  Activando entorno virtual..."
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 echo "✅ Entorno activado"
 echo ""
 

@@ -1,225 +1,228 @@
 # Asistente IA con Voz para DevOps
 
-Un asistente inteligente con capacidades de voz que ayuda a profesionales DevOps a implementar buenas prácticas, gobernanza y infraestructura en la nube.
+Asistente conversacional para equipos DevOps que combina voz, IA generativa y RAG para responder con contexto técnico real, recomendaciones prácticas y trazabilidad de fuentes.
 
-## 🎯 Características Principales
+## 🎯 Objetivo del Proyecto
 
-- **Consultas de Voz**: Interacción natural mediante reconocimiento de voz
-- **Análisis de Gobernanza**: Evaluación de políticas y compliance
-- **Recomendaciones de Buenas Prácticas**: Sugerencias basadas en infraestructura
-- **Integración GCP**: Cloud Storage, Compute Engine, Kubernetes, IAM
-- **Respuestas Inteligentes**: Powered by VertexAI/Gemini
-- **Auditoría y Logs**: Registro completo de consultas y recomendaciones
+Centralizar el conocimiento DevOps (estándares, Terraform, CI/CD, seguridad, service accounts, arquitectura) en un asistente de voz que responda en segundos con acciones ejecutables y contexto confiable.
 
-## 🏗️ Arquitectura
+## ✅ Beneficios
+
+- **Menor tiempo de búsqueda**: respuestas inmediatas sobre prácticas y estándares internos.
+- **Mejor consistencia técnica**: recomendaciones alineadas con gobernanza y buenas prácticas.
+- **Menos riesgo operativo**: enfoque en mínimo privilegio, validaciones y rollback.
+- **Experiencia natural**: interacción por voz y salida en español natural (configurada para `es-CO`).
+- **Trazabilidad**: respuestas RAG con `sources` para auditoría del conocimiento utilizado.
+
+## 🚀 Capacidades Actuales
+
+- Consultas de voz end-to-end (STT → LLM/RAG → TTS).
+- Motor RAG híbrido (vectorial + léxico) con modo estricto.
+- Recomendaciones DevOps por contexto e infraestructura.
+- Análisis de gobernanza (IAM, Storage, GKE) y compliance score.
+- Persistencia de audios en Cloud Storage.
+
+## 🏗️ Arquitectura General
+
+### Vista rápida
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Cliente (Web/CLI)                         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│            FastAPI Backend (Python)                          │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ • Voice Input Processing                             │  │
-│  │ • NLP & Intent Recognition                           │  │
-│  │ • Governance Analysis Engine                         │  │
-│  │ • Best Practices Engine                              │  │
-│  │ • Response Generation                                │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-   ┌─────────┐         ┌──────────────┐      ┌──────────────┐
-   │   GCP   │         │   VertexAI   │      │  Cloud       │
-   │ Storage │         │   / Gemini   │      │  Logging     │
-   │  & IAM  │         │              │      │              │
-   └─────────┘         └──────────────┘      └──────────────┘
+┌───────────────────┐      ┌──────────────────────────────┐      ┌────────────────────────────┐
+│ Cliente de Voz    │ ---> │ API FastAPI                  │ ---> │ Servicios GCP + Vertex AI  │
+│ voice_client.py   │      │ src/main.py + routers        │      │ STT, TTS, Gemini, Storage  │
+└───────────────────┘      └──────────────┬───────────────┘      └──────────────┬─────────────┘
+                                          │                                     │
+                                          v                                     v
+                                   ┌───────────────┐                    ┌──────────────────────┐
+                                   │ RAG Pipeline  │ <----------------- │ Base de conocimiento │
+                                   │ Chroma+Embeds │                    │          knowledge   │
+                                   └───────────────┘                    └──────────────────────┘
 ```
+
+### Capas del sistema
+
+- **Interfaz**: `voice_client.py` (captura/procesa audio y consume API).
+- **API**: `src/main.py` y routers en `src/routers/*`.
+- **Servicios**: `src/services/gcp_service.py` y `src/services/governance_service.py`.
+- **RAG**: `src/rag/ingest.py` y `src/rag/pipeline.py`.
+- **Prompts**: `src/prompts/*` versionados por dominio.
+
+### Flujo end-to-end
+
+1. Usuario habla o envía texto.
+2. `POST /api/v1/voice/transcribe` transcribe audio (Speech-to-Text).
+3. `POST /api/v1/voice/query` resuelve con RAG (si está activo) o fallback LLM.
+4. Se sintetiza respuesta con `POST /api/v1/voice/synthesize` (Text-to-Speech).
+5. Se devuelve JSON + `audio_base64` + `sources` (si aplica RAG).
+
+## 🧩 Componentes Principales
+
+- **Orquestación API**: `src/main.py`
+- **Router de voz**: `src/routers/voice.py`
+- **Router de gobernanza**: `src/routers/governance.py`
+- **Router de recomendaciones**: `src/routers/recommendations.py`
+- **Health/Ready**: `src/routers/health.py` (`/health`, `/ready`)
+- **Integración GCP + IA**: `src/services/gcp_service.py`
+- **Reglas de gobernanza**: `src/services/governance_service.py`
+- **RAG ingest**: `src/rag/ingest.py`
+- **RAG retrieval/generación**: `src/rag/pipeline.py`
 
 ## 📋 Requisitos
 
 - Python 3.10+
-- GCP Project con credentials configuradas
-- Docker y Docker Compose
-- Kubernetes (opcional, para deployment)
+- Proyecto GCP con APIs habilitadas
+- Credenciales válidas (`GOOGLE_APPLICATION_CREDENTIALS`)
+- (Opcional) Docker / Kubernetes para despliegue
 
-## 🚀 Inicio Rápido
+## ⚙️ Configuración de Entorno
 
-### 1. Configurar Entorno
+### 1) Preparar entorno local
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/aremolina15/asistente-ia-voz-python.git
 cd asistente-ia-voz-python
 
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-
-# Instalar dependencias
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configurar GCP
+### 2) Variables de entorno
 
 ```bash
-# Autenticación con GCP
-gcloud auth application-default login
-export GOOGLE_CLOUD_PROJECT=your-project-id
+cp .env.example .env
 ```
 
-### 3. Ejecutar la Aplicación
+Variables clave:
+
+- `GOOGLE_CLOUD_PROJECT`
+- `GCP_REGION`
+- `GOOGLE_APPLICATION_CREDENTIALS`
+- `RAG_ENABLED=true` (si quieres respuestas con contexto documental)
+- `VOICE_DEFAULT_LANGUAGE_CODE=es-CO`
+
+### 3) APIs GCP recomendadas
 
 ```bash
-# Modo desarrollo
-python -m uvicorn src.main:app --reload
-
-# La API estará disponible en http://localhost:8000
-# Documentación interactiva: http://localhost:8000/docs
+gcloud config set project TU_PROJECT_ID
+gcloud services enable aiplatform.googleapis.com speech.googleapis.com texttospeech.googleapis.com storage.googleapis.com
 ```
+
+## ▶️ Ejecución Correcta
+
+### Backend
+
+```bash
+source .venv/bin/activate
+python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### Validación rápida
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+> Si ves `curl: (7) Failed to connect`, el backend no está corriendo o está en otro puerto.
+
+### Documentación interactiva
+
+- `http://127.0.0.1:8000/docs`
+
+### Frontend web con micrófono
+
+- `http://127.0.0.1:8000/app`
+- Permite grabar voz desde el navegador, transcribir, consultar IA/RAG y reproducir la respuesta en audio.
+
+### Cliente de voz (opcional)
+
+En otra terminal:
+
+```bash
+source .venv/bin/activate
+python voice_client.py
+```
+
+## 🧠 Modo RAG
+
+### Ingestar conocimiento
+
+```bash
+source .venv/bin/activate
+python -m src.rag.ingest
+```
+
+### Qué hace el RAG actual
+
+- Chunking estructurado para Markdown/YAML/Terraform/PDF.
+- Embeddings con Vertex (`text-embedding-005`).
+- Almacenamiento vectorial local con Chroma.
+- Ranking híbrido por similitud + coincidencia de términos.
+- Modo estricto configurable (`RAG_STRICT_MODE`, `RAG_MIN_LEXICAL_OVERLAP`).
 
 ## 📁 Estructura del Proyecto
 
 ```
 asistente-ia-voz-python/
+├── frontend/
+│   └── index.html
 ├── src/
-│   ├── main.py                 # Punto de entrada de la aplicación
-│   ├── config.py               # Configuración de la app
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── governance.py       # Modelos de gobernanza
-│   │   ├── best_practices.py   # Modelos de buenas prácticas
-│   │   └── devops_rules.py     # Reglas DevOps
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── gcp_service.py      # Integración GCP
-│   │   ├── voice_service.py    # Procesamiento de voz
-│   │   ├── ai_service.py       # Motor de IA (VertexAI)
-│   │   ├── governance_service.py
-│   │   └── logger_service.py
+│   ├── main.py
+│   ├── config.py
+│   ├── prompts/
+│   ├── rag/
+│   │   ├── ingest.py
+│   │   └── pipeline.py
 │   ├── routers/
-│   │   ├── __init__.py
-│   │   ├── health.py           # Health checks
-│   │   ├── voice.py            # Endpoints de voz
-│   │   ├── governance.py       # Endpoints de gobernanza
-│   │   └── recommendations.py  # Endpoints de recomendaciones
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── request.py          # Esquemas de request
-│   │   └── response.py         # Esquemas de response
-│   └── utils/
-│       ├── __init__.py
-│       ├── validators.py
-│       └── helpers.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_voice.py
-│   ├── test_governance.py
-│   └── test_ai_service.py
-├── deployment/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── k8s/
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       └── ingress.yaml
+│   │   ├── health.py
+│   │   ├── voice.py
+│   │   ├── governance.py
+│   │   └── recommendations.py
+│   └── services/
+│       ├── gcp_service.py
+│       └── governance_service.py
+├── data/
+│   ├── knowledge/
+│   └── chroma/
+├── scripts/
+├── docs/
+├── examples/
+├── deployment/k8s/
+├── Dockerfile
+├── docker-compose.yml
 ├── .env.example
-├── requirements.txt
-├── requirements-dev.txt
-└── setup.py
+└── voice_client.py
 ```
 
-## 🔧 Desarrollo
-
-### Instalar Dependencias de Desarrollo
+## 🧪 Endpoints Útiles
 
 ```bash
-pip install -r requirements-dev.txt
-```
+# Health
+curl -s http://127.0.0.1:8000/health
 
-### Ejecutar Tests
-
-```bash
-pytest tests/ -v --cov=src
-```
-
-### Linting y Formateo
-
-```bash
-black src/ tests/
-flake8 src/ tests/
-mypy src/
-```
-
-## 🤖 Funcionalidades del Asistente
-
-### 1. Análisis de Gobernanza
-- Verificación de cumplimiento de políticas
-- Auditoría de accesos IAM
-- Análisis de permisos excesivos
-- Recomendaciones de seguridad
-
-### 2. Buenas Prácticas DevOps
-- Evaluación de configuración de CI/CD
-- Análisis de infraestructura como código
-- Recomendaciones de escalabilidad
-- Optimización de costos en GCP
-
-### 3. Procesamiento de Voz
-- Reconocimiento de intenciones
-- Generación de respuestas en texto
-- Síntesis de voz natural
-
-## 📚 Ejemplos de Uso
-
-```bash
-# Consultar sobre gobernanza de IAM
-curl -X POST http://localhost:8000/api/governance/analyze \
+# Consulta con voz/IA (texto)
+curl -X POST http://127.0.0.1:8000/api/v1/voice/query \
   -H "Content-Type: application/json" \
-  -d '{"resource": "projects/my-project/roles/custom_role", "type": "iam"}'
+  -d '{"query":"Dame una recomendación de seguridad para Terraform","language_code":"es-CO"}'
 
-# Obtener recomendaciones de buenas prácticas
-curl -X POST http://localhost:8000/api/recommendations \
+# Gobernanza IAM
+curl -X POST http://127.0.0.1:8000/api/v1/governance/analyze \
   -H "Content-Type: application/json" \
-  -d '{"infrastructure": "kubernetes", "area": "security"}'
+  -d '{"resource_type":"iam","resource_data":{"audit_logging_enabled":false}}'
 ```
 
-## 🔐 Seguridad
+## 🔐 Seguridad y Operación
 
-- Autenticación con Google Cloud IAM
-- Encriptación de datos sensibles
-- Validación de inputs
-- Rate limiting en endpoints
-- Logging de todas las acciones
+- Uso de service account para integración GCP.
+- Trazabilidad por logs y almacenamiento de audios en bucket.
+- Despliegue local con Docker Compose y productivo en `deployment/k8s`.
 
-## 📊 Monitoreo
+## 🤝 Contribución
 
-El proyecto incluye integración con:
-- Cloud Logging (GCP)
-- Cloud Monitoring (GCP)
-- OpenTelemetry (opcional)
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
-
-## 📝 Licencia
-
-Este proyecto está bajo la licencia MIT.
-
-## 📧 Soporte
-
-Para preguntas o problemas, abre un issue en el repositorio.
+1. Crea rama de trabajo.
+2. Implementa cambios con pruebas.
+3. Abre Pull Request con resumen técnico.
 
 ---
 
-**Última actualización**: 2026-01-22
+**Última actualización**: 2026-03-01
