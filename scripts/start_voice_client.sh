@@ -53,7 +53,7 @@ echo "✅ Configuración cargada"
 
 # Verificar que el servidor esté corriendo
 echo "🔍 Verificando servidor..."
-if ! curl -s http://127.0.0.1:8000/health > /dev/null 2>&1; then
+if ! curl -fs http://127.0.0.1:8000/health > /dev/null 2>&1; then
     echo "⚠️  El servidor no está corriendo en 127.0.0.1:8000"
     echo ""
     echo "Por favor, inicia el servidor en otra terminal con:"
