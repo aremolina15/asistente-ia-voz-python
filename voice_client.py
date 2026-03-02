@@ -14,18 +14,67 @@ import threading
 import queue
 import numpy as np
 import time
+import re
 
 API = "http://localhost:8000/api/v1/voice"
+VOICE_LANGUAGE_CODE = os.getenv("VOICE_LANGUAGE_CODE", "es-CO")
 response_queue = queue.Queue()
 processing_done = threading.Event()  # Señal para esperar fin de procesamiento
 
-def record_audio_continuous(sample_rate=16000, silence_threshold=0.012, silence_duration=2.5):
+
+def preprocess_audio(audio, noise_floor=0.003):
+    """Preprocesar audio para mejorar STT: quitar DC, noise gate, trim y normalizar."""
+    if audio is None or len(audio) == 0:
+        return audio
+
+    processed = audio.astype(np.float32)
+
+    # Remover offset DC
+    processed = processed - np.mean(processed)
+
+    # Noise gate adaptativo
+    gate = max(noise_floor * 1.25, 0.0025)
+    processed[np.abs(processed) < gate] = 0.0
+
+    # Trim de silencios al inicio/final
+    active_indexes = np.where(np.abs(processed) > gate * 0.9)[0]
+    if active_indexes.size > 0:
+        start = max(0, int(active_indexes[0]) - 400)
+        end = min(len(processed), int(active_indexes[-1]) + 400)
+        processed = processed[start:end]
+
+    # Normalizar ganancia
+    peak = float(np.max(np.abs(processed))) if processed.size else 0.0
+    if peak > 0:
+        processed = (processed / peak) * 0.92
+
+    return processed
+
+def record_audio_continuous(sample_rate=16000, silence_threshold=0.008, silence_duration=1.4):
     """Grabar audio continuamente con detección inteligente de silencio"""
     frames = []
     silence_count = 0
-    max_silence_count = int(silence_duration * sample_rate / 2048)
+    blocksize = 1024
+    max_silence_count = int(silence_duration * sample_rate / blocksize)
     has_audio = False
     sustained_sound = 0  # Detectar si hay sonido sostenido
+    volumes = []
+
+    print("🎤 Grabando... habla ahora")
+    print("🔧 Calibrando ruido ambiente (0.8s)...")
+
+    # Calibración inicial para umbral dinámico
+    calibration_frames = int((0.8 * sample_rate) / blocksize)
+    calibration_chunks = sd.rec(
+        calibration_frames * blocksize,
+        samplerate=sample_rate,
+        channels=1,
+        dtype='float32',
+    )
+    sd.wait()
+    noise_floor = float(np.abs(calibration_chunks).mean())
+    dynamic_threshold = max(silence_threshold, noise_floor * 2.2, 0.006)
+    print(f"🎚️ Umbral dinámico: {dynamic_threshold:.4f}")
     
     def callback(indata, frames_count, time_info, status):
         nonlocal silence_count, has_audio, sustained_sound
@@ -33,8 +82,9 @@ def record_audio_continuous(sample_rate=16000, silence_threshold=0.012, silence_
         
         # Detectar volumen promedio
         volume = np.abs(indata).mean()
+        volumes.append(float(volume))
         
-        if volume < silence_threshold:
+        if volume < dynamic_threshold:
             silence_count += 1
         else:
             silence_count = 0
@@ -42,27 +92,36 @@ def record_audio_continuous(sample_rate=16000, silence_threshold=0.012, silence_
             sustained_sound += 1  # Contar frames con sonido
     
     try:
-        print("🎤 Grabando... habla ahora")
-        stream = sd.InputStream(samplerate=sample_rate, channels=1, callback=callback, dtype='float32', blocksize=2048)
+        stream = sd.InputStream(samplerate=sample_rate, channels=1, callback=callback, dtype='float32', blocksize=blocksize)
         with stream:
             start_time = time.time()
             # Escuchar hasta 20 segundos máximo
             while time.time() - start_time < 20:
                 time.sleep(0.05)
                 
-                # Necesita al menos 0.5s de sonido sostenido
-                if sustained_sound > 10:
+                # Necesita al menos ~0.2s de sonido sostenido
+                if sustained_sound > 3:
                     # Detectó sonido, ahora espera silencio
                     if silence_count > max_silence_count:
                         print("✋ Fin de solicitud detectado")
-                        audio = np.concatenate(frames, axis=0)
+                        audio = np.concatenate(frames, axis=0).reshape(-1)
+                        audio = preprocess_audio(audio, noise_floor=noise_floor)
                         sf.write("temp.wav", audio, sample_rate)
                         return "temp.wav"
         
         # Si pasó el tiempo máximo con audio, guarda
-        if has_audio and frames and sustained_sound > 10:
+        if has_audio and frames and sustained_sound > 3:
             print("⏱️ Tiempo máximo alcanzado")
-            audio = np.concatenate(frames, axis=0)
+            audio = np.concatenate(frames, axis=0).reshape(-1)
+            audio = preprocess_audio(audio, noise_floor=noise_floor)
+            sf.write("temp.wav", audio, sample_rate)
+            return "temp.wav"
+
+        # Fallback: si hubo picos de voz aislados, guardar igualmente
+        if frames and volumes and max(volumes) > (dynamic_threshold * 1.6):
+            print("🎯 Voz detectada con baja continuidad, procesando igual")
+            audio = np.concatenate(frames, axis=0).reshape(-1)
+            audio = preprocess_audio(audio, noise_floor=noise_floor)
             sf.write("temp.wav", audio, sample_rate)
             return "temp.wav"
         
@@ -75,20 +134,53 @@ def transcribe(wav_file):
     """Transcribir audio"""
     try:
         with open(wav_file, "rb") as f:
-            res = requests.post(f"{API}/transcribe", files={"file": f}, timeout=15)
+            res = requests.post(
+                f"{API}/transcribe",
+                files={"file": f},
+                data={"language_code": VOICE_LANGUAGE_CODE},
+                timeout=15,
+            )
         if res.status_code == 200:
-            return res.json()["transcript"]
+            payload = res.json()
+            return {
+                "transcript": payload.get("transcript", ""),
+                "confidence": payload.get("confidence", 0.0),
+            }
         else:
             return None
     except Exception as e:
         print(f"❌ Error transcripción: {e}")
         return None
 
+def record_audio_with_retry(max_attempts=2):
+    """Grabar con retry automático y umbral más sensible en segundo intento."""
+    attempts = [
+        {"silence_threshold": 0.008, "silence_duration": 1.4},
+        {"silence_threshold": 0.0065, "silence_duration": 1.8},
+    ]
+
+    for index in range(min(max_attempts, len(attempts))):
+        wav = record_audio_continuous(**attempts[index])
+        if wav:
+            return wav
+        if index < max_attempts - 1:
+            print("🔁 Reintentando captura en modo ultra sensible...")
+    return None
+
+
 def clean_transcription(text):
     """Limpiar y normalizar transcripción con detección inteligente de intención"""
     text = text.strip()
     if not text:
         return ""
+
+    # Eliminar ruido verbal común de reconocimiento en voz
+    filler_words_pattern = r"\b(eh|emm|este|pues|mmm|a ver|bueno)\b"
+    text = re.sub(filler_words_pattern, " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    # Colapsar repeticiones accidentales de palabras (ej: "gcp gcp")
+    text = re.sub(r"\b(\w+)(\s+\1\b)+", r"\1", text, flags=re.IGNORECASE)
     
     # Palabras clave DevOps para mejor contexto
     question_starters = [
@@ -110,8 +202,6 @@ def clean_transcription(text):
     
     # Detectar tipo de frase
     text_lower = text.lower()
-    first_word = text_lower.split()[0] if text_lower.split() else ""
-    
     is_question = (
         any(text_lower.startswith(q) for q in question_starters) or
         "?" in text or
@@ -139,7 +229,7 @@ def query_ai(text):
     try:
         res = requests.post(f"{API}/query", json={
             "query": text,
-            "language_code": "es-ES"
+            "language_code": VOICE_LANGUAGE_CODE
         }, timeout=30)
         if res.status_code == 200:
             data = res.json()
@@ -162,11 +252,22 @@ def process_audio_thread():
             break
         
         print("\n📝 Transcribiendo...")
-        text = transcribe(wav_file)
-        if not text or len(text.strip()) < 2:
+        transcription = transcribe(wav_file)
+        if not transcription:
             print("🎧 Escuchando...\n")
             processing_done.set()  # Señalizar que terminó
             continue
+
+        text = transcription.get("transcript", "").strip()
+        confidence = float(transcription.get("confidence", 0.0) or 0.0)
+        if not text or len(text) < 2:
+            print("⚠️ No se entendió con claridad. Intenta repetir en una frase corta.\n")
+            print("🎧 Escuchando...\n")
+            processing_done.set()  # Señalizar que terminó
+            continue
+
+        if confidence and confidence < 0.45:
+            print(f"⚠️ Confianza baja en reconocimiento ({confidence:.2f}). Verifica ruido o micrófono.")
         
         print(f"👤 Tú: {text}\n")
         print("🤖 Procesando...")
@@ -204,7 +305,7 @@ def main():
     
     try:
         while True:
-            wav = record_audio_continuous()
+            wav = record_audio_with_retry()
             if wav:
                 print("⏳ Enviando a procesar...")
                 processing_done.clear()  # Resetear señal
@@ -213,7 +314,7 @@ def main():
                 processing_done.wait()  # ESPERAR A QUE TERMINE
                 print("\n🎤 Sistema listo. Habla ahora...\n")
             else:
-                print("⚠️ No se detectó audio claro\n")
+                print("⚠️ No se detectó audio claro. Intenta hablar más cerca del micrófono.\n")
     except KeyboardInterrupt:
         print("\n👋 Cerrando asistente...")
         response_queue.put(None)

@@ -6,6 +6,10 @@ from pydantic import BaseModel
 from typing import List
 import logging
 
+from src.prompts import (
+    build_devops_recommendations_prompt,
+    build_infrastructure_assessment_prompt,
+)
 from src.services.gcp_service import get_gcp_service
 
 logger = logging.getLogger(__name__)
@@ -42,23 +46,11 @@ async def get_devops_recommendations(request: RecommendationRequest):
     """
     try:
         gcp_service = get_gcp_service()
-        
-        prompt = f"""
-        Como experto en DevOps, proporciona recomendaciones específicas para:
-        
-        Tópico: {request.topic}
-        Contexto: {request.context}
-        Infraestructura: {request.infrastructure}
-        
-        Proporciona al menos 3 recomendaciones detalladas en formato JSON con:
-        - title: Título de la recomendación
-        - description: Descripción detallada
-        - priority: Nivel de prioridad (low/medium/high/critical)
-        - impact: Impacto estimado
-        - implementation_steps: Lista de pasos de implementación
-        
-        Responde SOLO con JSON válido.
-        """
+        prompt = build_devops_recommendations_prompt(
+            request.topic,
+            request.context,
+            request.infrastructure,
+        )
         
         response_text = gcp_service.get_ai_recommendation(prompt)
         
@@ -157,21 +149,7 @@ async def infrastructure_assessment(infrastructure_config: dict):
     """
     try:
         gcp_service = get_gcp_service()
-        
-        prompt = f"""
-        Evalúa la siguiente configuración de infraestructura y proporciona un assessment:
-        
-        {str(infrastructure_config)}
-        
-        Proporciona:
-        1. Puntuación general (0-100)
-        2. Áreas fortalecidas
-        3. Áreas de mejora
-        4. Recomendaciones prioritarias (top 5)
-        5. Riesgos identificados
-        
-        Responde en formato JSON estructurado.
-        """
+        prompt = build_infrastructure_assessment_prompt(infrastructure_config)
         
         response_text = gcp_service.get_ai_recommendation(prompt)
         
