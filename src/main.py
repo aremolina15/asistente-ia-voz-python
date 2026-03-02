@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import logging
 import os
 
-from src.routers import health, voice, governance, recommendations
+from src.routers import voice, governance, health, recommendations
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -47,9 +47,14 @@ app = FastAPI(
 )
 
 # Configurar CORS
+# NOTA: En producción, configura allowed_origins con dominios específicos
+# Ejemplo: allowed_origins=["https://tudominio.com", "https://app.tudominio.com"]
+origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+allowed_origins = origins_env.split(",") if origins_env != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

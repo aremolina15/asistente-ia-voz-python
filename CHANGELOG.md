@@ -106,9 +106,9 @@ processing_done = threading.Event()
 - sounddevice, soundfile
 
 ### 📊 Configuración
-- GCP Project: `heroic-dolphin-455016-q8`
-- Región: `us-central1`
-- Modelo: `gemini-2.0-flash`
+- GCP Project: Configurable vía `.env`
+- Región: `us-central1` (configurable)
+- Modelo: `gemini-2.0-flash` (configurable)
 - Idioma: Español
 
 ---
