@@ -210,3 +210,6 @@ Revisa:
 
 **Fecha**: 2026-01-22  
 **Estado**: ✅ Servidor iniciando...
+
+
+cd "/home/aremol1/Documents/LABs Personal/ASSISTENT-DEVOPS-VOICE/asistente-ia-voz-python" && export GOOGLE_APPLICATION_CREDENTIALS="$PWD/appengine-sa-key.json" && export GOOGLE_CLOUD_PROJECT="heroic-dolphin-455016-q8" && "/home/aremol1/Documents/LABs Personal/ASSISTENT-DEVOPS-VOICE/asistente-ia-voz-python/.venv/bin/python" voice_client.py

@@ -13,31 +13,39 @@ Un asistente inteligente con capacidades de voz que ayuda a profesionales DevOps
 
 ## 🏗️ Arquitectura
 
+### Vista rápida (para presentación)
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Cliente (Web/CLI)                         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│            FastAPI Backend (Python)                          │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ • Voice Input Processing                             │  │
-│  │ • NLP & Intent Recognition                           │  │
-│  │ • Governance Analysis Engine                         │  │
-│  │ • Best Practices Engine                              │  │
-│  │ • Response Generation                                │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-   ┌─────────┐         ┌──────────────┐      ┌──────────────┐
-   │   GCP   │         │   VertexAI   │      │  Cloud       │
-   │ Storage │         │   / Gemini   │      │  Logging     │
-   │  & IAM  │         │              │      │              │
-   └─────────┘         └──────────────┘      └──────────────┘
+┌───────────────────┐      ┌─────────────────────────────┐      ┌──────────────────────────┐
+│ Cliente de Voz    │ ---> │ API FastAPI (src/main.py)   │ ---> │ Servicios GCP + VertexAI │
+│ (voice_client.py) │      │ Routers + lógica de negocio │      │ STT, TTS, GenAI, Storage │
+└───────────────────┘      └─────────────────────────────┘      └──────────────────────────┘
 ```
+
+### Capas del sistema
+
+- **Capa 1 – Interfaz**: Cliente de voz (`voice_client.py`) y consumo HTTP de la API.
+- **Capa 2 – API**: FastAPI en `src/main.py`, que enruta requests a módulos especializados.
+- **Capa 3 – Dominio**: Reglas DevOps/Gobernanza en `src/services/governance_service.py`.
+- **Capa 4 – IA y Cloud**: Integración con GCP y Vertex AI en `src/services/gcp_service.py`.
+
+### Flujo end-to-end
+
+1. El usuario habla o envía consulta de texto.
+2. `POST /api/v1/voice/transcribe` convierte audio a texto (Speech-to-Text).
+3. `POST /api/v1/voice/query` construye la respuesta con Vertex AI (Gemini).
+4. La respuesta puede sintetizarse con `POST /api/v1/voice/synthesize` (Text-to-Speech).
+5. El sistema retorna JSON + audio (base64) y deja trazabilidad en logs.
+
+### Mapeo interno de componentes
+
+- **Orquestación de API**: `src/main.py`
+- **Endpoints de voz**: `src/routers/voice.py`
+- **Endpoints de gobernanza**: `src/routers/governance.py`
+- **Endpoints de recomendaciones**: `src/routers/recommendations.py`
+- **Health/Readiness**: `src/routers/health.py`
+- **Servicios cloud/GenAI**: `src/services/gcp_service.py`
+- **Motor de reglas DevOps**: `src/services/governance_service.py`
 
 ## 📋 Requisitos
 
@@ -86,50 +94,40 @@ python -m uvicorn src.main:app --reload
 ```
 asistente-ia-voz-python/
 ├── src/
-│   ├── main.py                 # Punto de entrada de la aplicación
-│   ├── config.py               # Configuración de la app
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── governance.py       # Modelos de gobernanza
-│   │   ├── best_practices.py   # Modelos de buenas prácticas
-│   │   └── devops_rules.py     # Reglas DevOps
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── gcp_service.py      # Integración GCP
-│   │   ├── voice_service.py    # Procesamiento de voz
-│   │   ├── ai_service.py       # Motor de IA (VertexAI)
-│   │   ├── governance_service.py
-│   │   └── logger_service.py
+│   ├── main.py                     # FastAPI app + registro de routers
+│   ├── config.py                   # Configuración central
 │   ├── routers/
-│   │   ├── __init__.py
-│   │   ├── health.py           # Health checks
-│   │   ├── voice.py            # Endpoints de voz
-│   │   ├── governance.py       # Endpoints de gobernanza
-│   │   └── recommendations.py  # Endpoints de recomendaciones
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── request.py          # Esquemas de request
-│   │   └── response.py         # Esquemas de response
-│   └── utils/
-│       ├── __init__.py
-│       ├── validators.py
-│       └── helpers.py
+│   │   ├── health.py               # Health/readiness endpoints
+│   │   ├── voice.py                # Endpoints STT/TTS y consulta IA
+│   │   ├── governance.py           # Endpoints de gobernanza
+│   │   └── recommendations.py      # Endpoints de recomendaciones
+│   └── services/
+│       ├── gcp_service.py          # Integración GCP + Vertex AI
+│       └── governance_service.py   # Reglas y análisis de compliance
 ├── tests/
 │   ├── __init__.py
-│   ├── test_voice.py
-│   ├── test_governance.py
-│   └── test_ai_service.py
+│   └── test_governance.py
+├── scripts/
+│   ├── run.sh                      # Arranque local del backend
+│   ├── setup.sh                    # Setup GCP y entorno
+│   ├── start_voice_client.sh       # Cliente de voz
+│   ├── test_endpoints.sh           # Smoke test de endpoints
+│   ├── deploy-gke.sh               # Deploy a GKE
+│   └── show-structure.py
+├── docs/                           # Documentación extendida
+├── examples/
+│   └── api_examples.py
 ├── deployment/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
 │   └── k8s/
 │       ├── deployment.yaml
 │       ├── service.yaml
 │       └── ingress.yaml
+├── Dockerfile
+├── docker-compose.yml
 ├── .env.example
 ├── requirements.txt
 ├── requirements-dev.txt
-└── setup.py
+└── voice_client.py
 ```
 
 ## 🔧 Desarrollo
@@ -177,14 +175,12 @@ mypy src/
 
 ```bash
 # Consultar sobre gobernanza de IAM
-curl -X POST http://localhost:8000/api/governance/analyze \
+curl -X POST http://localhost:8000/api/v1/governance/analyze \
   -H "Content-Type: application/json" \
-  -d '{"resource": "projects/my-project/roles/custom_role", "type": "iam"}'
+  -d '{"resource_type": "iam", "resource_data": {"audit_logging_enabled": false}}'
 
 # Obtener recomendaciones de buenas prácticas
-curl -X POST http://localhost:8000/api/recommendations \
-  -H "Content-Type: application/json" \
-  -d '{"infrastructure": "kubernetes", "area": "security"}'
+curl -s http://localhost:8000/api/v1/recommendations/quick/security
 ```
 
 ## 🔐 Seguridad

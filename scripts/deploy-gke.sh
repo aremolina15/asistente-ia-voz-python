@@ -5,6 +5,10 @@
 
 set -e
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( dirname "$SCRIPT_DIR" )"
+cd "$PROJECT_DIR"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -25,7 +29,7 @@ print_error() {
 # Validar argumentos
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
     print_error "Argumentos requeridos"
-    echo "Uso: ./deploy-gke.sh <project-id> <cluster-name> <region>"
+    echo "Uso: ./scripts/deploy-gke.sh <project-id> <cluster-name> <region>"
     exit 1
 fi
 

@@ -6,7 +6,7 @@ Script para mostrar la estructura del proyecto
 import os
 from pathlib import Path
 
-def create_tree(directory, prefix="", exclude_dirs={".git", "venv", "__pycache__", ".pytest_cache", "node_modules", ".env"}):
+def create_tree(directory, prefix="", exclude_dirs={".git", ".venv", "venv", "__pycache__", ".pytest_cache", "node_modules", ".env"}):
     """Crear árbol de directorios"""
     contents = []
     try:
@@ -30,7 +30,7 @@ def create_tree(directory, prefix="", exclude_dirs={".git", "venv", "__pycache__
     return contents
 
 def main():
-    project_root = Path(__file__).parent
+    project_root = Path(__file__).resolve().parent.parent
     
     print("📁 Estructura del Proyecto - DevOps Voice Assistant")
     print("=" * 60)
@@ -57,7 +57,7 @@ def main():
     
     for root, dirs, files in os.walk(project_root):
         # Skip excluded directories
-        dirs[:] = [d for d in dirs if d not in {".git", "venv", "__pycache__"}]
+        dirs[:] = [d for d in dirs if d not in {".git", ".venv", "venv", "__pycache__"}]
         
         for file in files:
             if file.endswith(".py"):
