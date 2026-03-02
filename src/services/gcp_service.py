@@ -1,15 +1,12 @@
 """
 Servicios para integración con Google Cloud Platform
 """
-import os
 import json
 import logging
 from typing import Optional, Dict, Any
 from google.cloud import storage, speech_v1, texttospeech_v1
-from google.cloud import aiplatform
 import vertexai
-from vertexai.generative_models import GenerativeModel, Part
-from io import BytesIO
+from vertexai.generative_models import GenerativeModel
 
 from src.config import settings
 

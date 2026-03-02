@@ -33,6 +33,18 @@ class Settings(BaseSettings):
     # Configuración de seguridad
     allowed_origins: list = ["*"]  # Cambiar en producción
     secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Advertencia de seguridad si se usa la clave por defecto en producción
+        if not self.debug and self.secret_key == "dev-secret-key-change-in-production":
+            import warnings
+            warnings.warn(
+                "⚠️  ADVERTENCIA DE SEGURIDAD: Usando SECRET_KEY por defecto en modo producción. "
+                "Por favor configura SECRET_KEY en tu archivo .env con un valor único y seguro.",
+                UserWarning,
+                stacklevel=2
+            )
 
     # Configuración de logging
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
